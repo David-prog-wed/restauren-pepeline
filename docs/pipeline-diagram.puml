@@ -1,0 +1,56 @@
+@startuml
+title Pipeline CI/CD - Sistema de Restaurante (AA2)
+
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam rectangle {
+  BorderColor #2F5597
+  RoundCorner 12
+}
+skinparam shadowing false
+
+start
+
+:Push/PR en repositorio GitHub;
+
+rectangle "Stage 1: Checkout" as S1 {
+  :Clonar repositorio;
+  :Preparar workspace;
+}
+
+rectangle "Stage 2: Build" as S2 {
+  :Construir imágenes Docker;
+  :Validar dependencias por servicio;
+}
+
+rectangle "Stage 3: Start Services" as S3 {
+  :docker compose up -d;
+  :Levantar auth/reservations/orders/frontend/postgres;
+}
+
+rectangle "Stage 4: Automated Tests" as S4 {
+  :Health checks;
+  :Pruebas API happy path;
+  :Pruebas API error/edge cases;
+}
+
+rectangle "Stage 5: Quality & Security" as S5 {
+  :Análisis estático (Sonar);
+  :Escaneo de vulnerabilidades (Trivy/Bandit);
+}
+
+if (Quality Gate aprobado?) then (Sí)
+  rectangle "Stage 6: Deploy Staging" as S6 {
+    :Despliegue controlado a staging;
+    :Smoke tests post-deploy;
+  }
+  :Notificar éxito (pipeline verde);
+else (No)
+  :Detener pipeline (fail-fast);
+  :Generar reporte de fallos;
+  :Notificar error y acciones correctivas;
+endif
+
+stop
+
+@enduml

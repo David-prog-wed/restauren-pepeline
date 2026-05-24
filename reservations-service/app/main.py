@@ -1,8 +1,10 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from datetime import datetime
 import uuid
 
 app = Flask(__name__)
+CORS(app, resources={r"/api/*": {"origins": "*"}})
 reservations_db = []
 tables = [
     {"id": 1, "capacity": 2, "zone": "interior"},
