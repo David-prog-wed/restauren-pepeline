@@ -54,6 +54,9 @@ Opcional para desarrollo local:
 
 ```bash
 docker-compose up --build
+docker compose ps
+docker compose logs -f
+docker compose down
 ```
 
 Accesos principales:
