@@ -7,8 +7,8 @@
 ## Portada
 
 **Título del proyecto:** AA2 – ABP: Proyecto Integrador – Construcción de un Pipeline para un Proyecto de Software  
-**Nombre completo del estudiante:** **************\_\_\_\_**************  
-**Nombre del curso:** **************\_\_\_\_**************  
+**Nombre completo del estudiante:** ******\*\*******\_\_\_\_******\*\*******  
+**Nombre del curso:** ******\*\*******\_\_\_\_******\*\*******  
 **Fecha de entrega:** \_**\_ / \_\_** / **\_\_**
 
 ---
@@ -156,22 +156,22 @@ jobs:
       - name: API functional tests
         run: |
           # Auth
-          echo '{"name":"QA User","email":"qa@example.com","password":"123456"}' > auth_register.json
-          curl -f -X POST http://localhost:5001/api/auth/register -H "Content-Type: application/json" --data @auth_register.json
+echo '{"name":"QA User","email":"qa@example.com","password":"123456"}' > samples/auth_register.json
+curl -f -X POST http://localhost:5001/api/auth/register -H "Content-Type: application/json" --data @samples/auth_register.json
 
-          echo '{"email":"qa@example.com","password":"123456"}' > auth_login.json
-          curl -f -X POST http://localhost:5001/api/auth/login -H "Content-Type: application/json" --data @auth_login.json
+echo '{"email":"qa@example.com","password":"123456"}' > samples/auth_login.json
+curl -f -X POST http://localhost:5001/api/auth/login -H "Content-Type: application/json" --data @samples/auth_login.json
 
           # Reservations
           curl -f "http://localhost:5002/api/reservations/availability?date=2026-05-25&time=19:00&party_size=2"
 
-          echo '{"customer_id":1,"date":"2026-05-25","time":"19:00","party_size":2}' > reservation_create.json
-          curl -f -X POST http://localhost:5002/api/reservations/ -H "Content-Type: application/json" --data @reservation_create.json
+echo '{"customer_id":1,"date":"2026-05-25","time":"19:00","party_size":2}' > samples/reservation_create.json
+curl -f -X POST http://localhost:5002/api/reservations/ -H "Content-Type: application/json" --data @samples/reservation_create.json
 
           # Orders
           curl -f http://localhost:5003/api/menu/
-          echo '{"customer_id":1,"items":[{"product_id":"P001","quantity":1}]}' > order_create.json
-          curl -f -X POST http://localhost:5003/api/orders/ -H "Content-Type: application/json" --data @order_create.json
+echo '{"customer_id":1,"items":[{"product_id":"P001","quantity":1}]}' > samples/order_create.json
+curl -f -X POST http://localhost:5003/api/orders/ -H "Content-Type: application/json" --data @samples/order_create.json
 
       - name: Static analysis
         run: sonar-scanner
@@ -266,7 +266,7 @@ A continuación se describe la simulación real ejecutada en entorno local con D
 - **Causa raíz:** escaping incorrecto del JSON en línea de comandos.
 - **Corrección aplicada:** uso de archivos de payload:
   ```bash
-  curl.exe -X POST ... --data "@payload.json"
+  curl.exe -X POST ... --data "@samples/payload.json"
   ```
 - **Validación posterior:** registro exitoso `201` y flujo completo operativo.
 
@@ -278,9 +278,9 @@ A continuación se describe la simulación real ejecutada en entorno local con D
 docker compose up --build -d
 docker compose ps
 curl.exe -i http://localhost:5003/api/menu/
-curl.exe -i -X POST http://localhost:5001/api/auth/register -H "Content-Type: application/json" --data "@auth_register.json"
-curl.exe -i -X POST http://localhost:5002/api/reservations/ -H "Content-Type: application/json" --data "@reservation_create.json"
-curl.exe -i -X POST http://localhost:5003/api/orders/ -H "Content-Type: application/json" --data "@order_create.json"
+curl.exe -i -X POST http://localhost:5001/api/auth/register -H "Content-Type: application/json" --data "@samples/auth_register.json"
+curl.exe -i -X POST http://localhost:5002/api/reservations/ -H "Content-Type: application/json" --data "@samples/reservation_create.json"
+curl.exe -i -X POST http://localhost:5003/api/orders/ -H "Content-Type: application/json" --data "@samples/order_create.json"
 ```
 
 **Resultados observados clave**
