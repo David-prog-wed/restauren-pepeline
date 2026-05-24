@@ -31,46 +31,46 @@ jobs:
 
       - name: API happy path tests
         run: |
-          echo '{"name":"QA User","email":"qa_ci@example.com","password":"123456"}' > auth_register.json
+          echo '{"name":"QA User","email":"qa_ci@example.com","password":"123456"}' > samples/auth_register.json
           curl -fsS -X POST http://localhost:5001/api/auth/register \
             -H "Content-Type: application/json" \
-            --data @auth_register.json
+            --data @samples/auth_register.json
 
-          echo '{"email":"qa_ci@example.com","password":"123456"}' > auth_login.json
+          echo '{"email":"qa_ci@example.com","password":"123456"}' > samples/auth_login.json
           curl -fsS -X POST http://localhost:5001/api/auth/login \
             -H "Content-Type: application/json" \
-            --data @auth_login.json
+            --data @samples/auth_login.json
 
           curl -fsS "http://localhost:5002/api/reservations/availability?date=2026-06-01&time=19:00&party_size=2"
 
-          echo '{"customer_id":1,"date":"2026-06-01","time":"19:00","party_size":2}' > reservation_create.json
+          echo '{"customer_id":1,"date":"2026-06-01","time":"19:00","party_size":2}' > samples/reservation_create.json
           curl -fsS -X POST http://localhost:5002/api/reservations/ \
             -H "Content-Type: application/json" \
-            --data @reservation_create.json
+            --data @samples/reservation_create.json
 
           curl -fsS http://localhost:5003/api/menu/
 
-          echo '{"customer_id":1,"items":[{"product_id":"P001","quantity":1}]}' > order_create.json
+          echo '{"customer_id":1,"items":[{"product_id":"P001","quantity":1}]}' > samples/order_create.json
           curl -fsS -X POST http://localhost:5003/api/orders/ \
             -H "Content-Type: application/json" \
-            --data @order_create.json
+            --data @samples/order_create.json
 
       - name: API error path tests
         run: |
-          echo '{"email":"qa_ci@example.com","password":"wrong"}' > auth_login_bad.json
+          echo '{"email":"qa_ci@example.com","password":"wrong"}' > samples/auth_login_bad.json
           curl -s -o /tmp/auth_bad.out -w "%{http_code}" -X POST http://localhost:5001/api/auth/login \
             -H "Content-Type: application/json" \
-            --data @auth_login_bad.json | grep -q "401"
+            --data @samples/auth_login_bad.json | grep -q "401"
 
-          echo '{"customer_id":1,"date":"2026-06-01","time":"19:00"}' > reservation_bad.json
+          echo '{"customer_id":1,"date":"2026-06-01","time":"19:00"}' > samples/reservation_bad.json
           curl -s -o /tmp/res_bad.out -w "%{http_code}" -X POST http://localhost:5002/api/reservations/ \
             -H "Content-Type: application/json" \
-            --data @reservation_bad.json | grep -q "400"
+            --data @samples/reservation_bad.json | grep -q "400"
 
-          echo '{"customer_id":1,"items":[{"product_id":"BAD","quantity":1}]}' > order_bad.json
+          echo '{"customer_id":1,"items":[{"product_id":"BAD","quantity":1}]}' > samples/order_bad.json
           curl -s -o /tmp/order_bad.out -w "%{http_code}" -X POST http://localhost:5003/api/orders/ \
             -H "Content-Type: application/json" \
-            --data @order_bad.json | grep -q "404"
+            --data @samples/order_bad.json | grep -q "404"
 
       - name: Show container logs on failure
         if: failure()
