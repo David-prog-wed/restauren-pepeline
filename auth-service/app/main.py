@@ -1,8 +1,10 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
 import jwt, datetime, os
 
 app = Flask(__name__)
+CORS(app, resources={r"/api/*": {"origins": "*"}})
 SECRET_KEY = os.getenv("SECRET_KEY", "restaurant-secret-dev-key-2026")
 users_db = {}
 

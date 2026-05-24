@@ -1,22 +1,14 @@
-# TODO - Frontend + Backend/CI-CD Restaurant Pipeline
+# TODO - Fix CORS and validate full app flow
 
-## Frontend (completado)
-
-- [x] Crear estructura `frontend/` con archivos base.
-- [x] Implementar `frontend/index.html` con secciones Auth, Reservas y Órdenes.
-- [x] Implementar `frontend/styles.css` para layout responsive y componentes UI.
-- [x] Implementar `frontend/app.js` con llamadas fetch a microservicios.
-- [x] Agregar `frontend/Dockerfile` para servir estáticos con Nginx.
-- [x] Actualizar `docker-compose.yml` para incluir servicio `frontend` en puerto 8080.
-- [x] Actualizar `README.md` con instrucciones del frontend.
-- [x] Validar consistencia final de archivos modificados.
-
-## Fase AA2 Backend/CI-CD (completado)
-
-- [x] Revisar archivos actuales de backend y testing por servicio.
-- [x] Crear workflow CI: `.github/workflows/ci.yml`.
-- [x] Integrar análisis estático y seguridad en CI (flake8 + bandit/pip-audit).
-- [x] Crear workflow CD staging: `.github/workflows/cd-staging.yml`.
-- [x] Crear documentación en `docs/` (diagrama pipeline, simulación, evidencias).
-- [x] Actualizar `README.md` con sección Backend/CI-CD AA2.
-- [x] Validar sintaxis de workflows y consistencia de documentación.
+- [x] Add `flask-cors` dependency to:
+  - [x] auth-service/requirements.txt
+  - [x] reservations-service/requirements.txt
+  - [x] orders-service/requirements.txt
+- [x] Enable CORS in:
+  - [x] auth-service/app/main.py
+  - [x] reservations-service/app/main.py
+  - [x] orders-service/app/main.py
+- [ ] Rebuild and restart containers
+- [ ] Run API creation tests (register/reservation/order)
+- [ ] Validate service logs for POST/PUT requests
+- [ ] Provide final status and run commands
