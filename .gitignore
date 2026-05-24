@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.env
+venv/
+.coverage
+coverage.xml
+htmlcov/
+node_modules/
+build/
+reports/
+kubeconfig

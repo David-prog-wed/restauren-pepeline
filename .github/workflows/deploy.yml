@@ -1,0 +1,186 @@
+name: Restaurant CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  DOCKER_REGISTRY: ghcr.io/restaurant-app
+  STAGING_NS: restaurant-staging
+
+jobs:
+
+  build:
+    name: "1. Build & Docker Images"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+      - name: Build frontend
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install backend dependencies
+        run: |
+          pip install -r auth-service/requirements.txt
+          pip install -r reservations-service/requirements.txt
+          pip install -r orders-service/requirements.txt
+      - name: Login to Docker registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build & push auth-service
+        uses: docker/build-push-action@v5
+        with:
+          context: ./auth-service
+          push: true
+          tags: ${{ env.DOCKER_REGISTRY }}/auth-service:${{ github.sha }}
+      - name: Build & push reservations-service
+        uses: docker/build-push-action@v5
+        with:
+          context: ./reservations-service
+          push: true
+          tags: ${{ env.DOCKER_REGISTRY }}/reservations-service:${{ github.sha }}
+      - name: Build & push orders-service
+        uses: docker/build-push-action@v5
+        with:
+          context: ./orders-service
+          push: true
+          tags: ${{ env.DOCKER_REGISTRY }}/orders-service:${{ github.sha }}
+
+  test:
+    name: "2. Automated Tests"
+    runs-on: ubuntu-latest
+    needs: build
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: restaurant_test
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_pass
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tests frontend (Jest)
+        working-directory: frontend
+        run: |
+          npm ci
+          npm test -- --watchAll=false --coverage
+      - name: Tests auth-service (PyTest)
+        working-directory: auth-service
+        env:
+          DATABASE_URL: postgresql://test_user:test_pass@localhost:5432/restaurant_test
+        run: |
+          pip install -r requirements.txt
+          pytest tests/unit/ -v --cov=app --cov-report=xml
+      - name: Tests reservations-service (PyTest)
+        working-directory: reservations-service
+        env:
+          DATABASE_URL: postgresql://test_user:test_pass@localhost:5432/restaurant_test
+        run: |
+          pip install -r requirements.txt
+          pytest tests/unit/ -v --cov=app --cov-report=xml
+      - name: Tests orders-service (PyTest)
+        working-directory: orders-service
+        env:
+          DATABASE_URL: postgresql://test_user:test_pass@localhost:5432/restaurant_test
+        run: |
+          pip install -r requirements.txt
+          pytest tests/unit/ -v --cov=app --cov-report=xml
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          files: >-
+            ./auth-service/coverage.xml,
+            ./reservations-service/coverage.xml,
+            ./orders-service/coverage.xml
+
+  analyze:
+    name: "3. Code Quality & Security"
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: SonarCloud analysis
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      - name: OWASP Dependency-Check
+        uses: dependency-check/Dependency-Check_Action@main
+        with:
+          project: "restaurant-system"
+          path: "."
+          format: "HTML"
+          out: "reports"
+          args: >
+            --failOnCVSS 7
+            --enableRetired
+      - name: Upload OWASP report
+        uses: actions/upload-artifact@v4
+        with:
+          name: owasp-report
+          path: reports/
+
+  deploy-staging:
+    name: "4. Deploy to Staging"
+    runs-on: ubuntu-latest
+    needs: analyze
+    if: github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main'
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-kubectl@v3
+      - name: Configure cluster access
+        run: echo "${{ secrets.KUBECONFIG_STAGING }}" | base64 -d > kubeconfig
+      - name: Update images in Kubernetes
+        run: |
+          kubectl set image deployment/auth-service \
+            auth-service=${{ env.DOCKER_REGISTRY }}/auth-service:${{ github.sha }} \
+            -n ${{ env.STAGING_NS }}
+          kubectl set image deployment/reservations-service \
+            reservations-service=${{ env.DOCKER_REGISTRY }}/reservations-service:${{ github.sha }} \
+            -n ${{ env.STAGING_NS }}
+          kubectl set image deployment/orders-service \
+            orders-service=${{ env.DOCKER_REGISTRY }}/orders-service:${{ github.sha }} \
+            -n ${{ env.STAGING_NS }}
+      - name: Verify rollout
+        run: |
+          kubectl rollout status deployment/auth-service -n ${{ env.STAGING_NS }} --timeout=120s
+          kubectl rollout status deployment/reservations-service -n ${{ env.STAGING_NS }} --timeout=120s
+          kubectl rollout status deployment/orders-service -n ${{ env.STAGING_NS }} --timeout=120s
+      - name: Health check
+        run: |
+          sleep 10
+          curl -f http://staging.restaurant-app.local/health || exit 1
+      - name: Notify Slack
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: "Deploy staging: ${{ job.status }} | Commit: ${{ github.sha }}"
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}

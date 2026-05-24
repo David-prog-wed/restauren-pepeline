@@ -1,0 +1,51 @@
+version: "3.9"
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: restaurant_db
+      POSTGRES_USER: restaurant_user
+      POSTGRES_PASSWORD: restaurant_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "restaurant_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  auth-service:
+    build: ./auth-service
+    ports:
+      - "5001:5001"
+    environment:
+      DATABASE_URL: postgresql://restaurant_user:restaurant_pass@postgres:5432/restaurant_db
+      SECRET_KEY: restaurant-secret-local-dev
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  reservations-service:
+    build: ./reservations-service
+    ports:
+      - "5002:5002"
+    environment:
+      DATABASE_URL: postgresql://restaurant_user:restaurant_pass@postgres:5432/restaurant_db
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  orders-service:
+    build: ./orders-service
+    ports:
+      - "5003:5003"
+    environment:
+      DATABASE_URL: postgresql://restaurant_user:restaurant_pass@postgres:5432/restaurant_db
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres_data:

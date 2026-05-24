@@ -1,0 +1,105 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-service
+  namespace: restaurant-staging
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: auth-service
+  template:
+    metadata:
+      labels:
+        app: auth-service
+    spec:
+      containers:
+        - name: auth-service
+          image: ghcr.io/restaurant-app/auth-service:latest
+          ports:
+            - containerPort: 5001
+          env:
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: restaurant-secrets
+                  key: secret-key
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5001
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5001
+            initialDelaySeconds: 15
+            periodSeconds: 20
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: reservations-service
+  namespace: restaurant-staging
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: reservations-service
+  template:
+    metadata:
+      labels:
+        app: reservations-service
+    spec:
+      containers:
+        - name: reservations-service
+          image: ghcr.io/restaurant-app/reservations-service:latest
+          ports:
+            - containerPort: 5002
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5002
+            initialDelaySeconds: 5
+            periodSeconds: 10
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orders-service
+  namespace: restaurant-staging
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: orders-service
+  template:
+    metadata:
+      labels:
+        app: orders-service
+    spec:
+      containers:
+        - name: orders-service
+          image: ghcr.io/restaurant-app/orders-service:latest
+          ports:
+            - containerPort: 5003
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5003
+            initialDelaySeconds: 5
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: restaurant-gateway
+  namespace: restaurant-staging
+spec:
+  selector:
+    app: reservations-service
+  ports:
+    - port: 80
+      targetPort: 5002
+  type: LoadBalancer
