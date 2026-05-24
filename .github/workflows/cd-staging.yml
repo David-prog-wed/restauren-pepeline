@@ -1,0 +1,52 @@
+name: CD - Staging Deploy
+
+on:
+  workflow_run:
+    workflows: ["CI - Restaurant Pipeline"]
+    types:
+      - completed
+  workflow_dispatch:
+
+jobs:
+  deploy-staging:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set image tag
+        run: echo "IMAGE_TAG=${GITHUB_SHA::7}" >> $GITHUB_ENV
+
+      - name: Build auth-service image
+        run: docker build -t restaurant/auth-service:${IMAGE_TAG} ./auth-service
+
+      - name: Build reservations-service image
+        run: docker build -t restaurant/reservations-service:${IMAGE_TAG} ./reservations-service
+
+      - name: Build orders-service image
+        run: docker build -t restaurant/orders-service:${IMAGE_TAG} ./orders-service
+
+      - name: Build frontend image
+        run: docker build -t restaurant/frontend:${IMAGE_TAG} ./frontend
+
+      - name: Simulate deploy to staging
+        run: |
+          echo "Desplegando imágenes a staging (simulado):"
+          echo "restaurant/auth-service:${IMAGE_TAG}"
+          echo "restaurant/reservations-service:${IMAGE_TAG}"
+          echo "restaurant/orders-service:${IMAGE_TAG}"
+          echo "restaurant/frontend:${IMAGE_TAG}"
+          echo "Aplicando manifiestos de k8s/staging.yml (simulado)"
+          echo "Deploy staging completado"
+
+      - name: Post-deploy health checks (simulado)
+        run: |
+          echo "Verificando endpoints /health en staging (simulado)"
+          echo "auth-service: ok"
+          echo "reservations-service: ok"
+          echo "orders-service: ok"

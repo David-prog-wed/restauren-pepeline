@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Restaurant Pipeline Frontend</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+
+<body>
+  <header class="app-header">
+    <h1>Sistema de Gestión de Restaurante</h1>
+    <p>Frontend para auth-service, reservations-service y orders-service</p>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <h2>Configuración API</h2>
+      <div class="grid-3">
+        <label>Auth URL
+          <input id="authBase" type="text" value="http://localhost:5001" />
+        </label>
+        <label>Reservations URL
+          <input id="resBase" type="text" value="http://localhost:5002" />
+        </label>
+        <label>Orders URL
+          <input id="ordBase" type="text" value="http://localhost:5003" />
+        </label>
+      </div>
+      <small>Si usas Docker Compose local, estos valores ya funcionan por defecto.</small>
+    </section>
+
+    <section class="card">
+      <h2>Auth Service</h2>
+      <div class="grid-2">
+        <form id="registerForm">
+          <h3>Registro</h3>
+          <label>Nombre <input name="name" required /></label>
+          <label>Email <input name="email" type="email" required /></label>
+          <label>Password <input name="password" type="password" required /></label>
+          <button type="submit">Registrar</button>
+        </form>
+
+        <form id="loginForm">
+          <h3>Login</h3>
+          <label>Email <input name="email" type="email" required /></label>
+          <label>Password <input name="password" type="password" required /></label>
+          <button type="submit">Iniciar sesión</button>
+        </form>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Reservations Service</h2>
+      <div class="grid-2">
+        <form id="availabilityForm">
+          <h3>Consultar disponibilidad</h3>
+          <label>Fecha <input name="date" type="date" required /></label>
+          <label>Hora <input name="time" type="time" required /></label>
+          <label>Tamaño del grupo <input name="party_size" type="number" min="1" value="2" required /></label>
+          <button type="submit">Consultar</button>
+        </form>
+
+        <form id="createReservationForm">
+          <h3>Crear reserva</h3>
+          <label>Customer ID <input name="customer_id" type="number" required /></label>
+          <label>Fecha <input name="date" type="date" required /></label>
+          <label>Hora <input name="time" type="time" required /></label>
+          <label>Tamaño del grupo <input name="party_size" type="number" min="1" value="2" required /></label>
+          <button type="submit">Crear reserva</button>
+        </form>
+
+        <form id="getReservationForm">
+          <h3>Consultar reserva por ID</h3>
+          <label>Reservation ID <input name="rid" required /></label>
+          <button type="submit">Consultar reserva</button>
+        </form>
+
+        <form id="cancelReservationForm">
+          <h3>Cancelar reserva</h3>
+          <label>Reservation ID <input name="rid" required /></label>
+          <button type="submit">Cancelar reserva</button>
+        </form>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Orders Service</h2>
+      <div class="grid-2">
+        <form id="menuForm">
+          <h3>Ver menú</h3>
+          <button type="submit">Obtener menú</button>
+        </form>
+
+        <form id="createOrderForm">
+          <h3>Crear pedido</h3>
+          <label>Customer ID <input name="customer_id" type="number" required /></label>
+          <label>Items (JSON)
+            <textarea name="items" rows="6" required>[{"product_id":"P001","quantity":1}]</textarea>
+          </label>
+          <button type="submit">Crear pedido</button>
+        </form>
+
+        <form id="confirmOrderForm">
+          <h3>Confirmar pedido</h3>
+          <label>Order ID <input name="oid" required /></label>
+          <button type="submit">Confirmar pedido</button>
+        </form>
+
+        <form id="getOrderForm">
+          <h3>Consultar pedido por ID</h3>
+          <label>Order ID <input name="oid" required /></label>
+          <button type="submit">Consultar pedido</button>
+        </form>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Respuesta</h2>
+      <pre id="output">Esperando acción...</pre>
+    </section>
+  </main>
+
+  <script src="./app.js"></script>
+</body>
+
+</html>

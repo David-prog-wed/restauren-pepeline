@@ -11,7 +11,8 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "restaurant_user"]
+      test:
+        ["CMD", "pg_isready", "-U", "restaurant_user", "-d", "restaurant_db"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -46,6 +47,15 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - auth-service
+      - reservations-service
+      - orders-service
 
 volumes:
   postgres_data:
